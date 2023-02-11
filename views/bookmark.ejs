@@ -46,20 +46,12 @@
 
                         <%- blog.blog%>
                         <!--  -->
-
-                        <% if(user.bookmark.includes(blog._id)){ %>
                         <a
                             href="/unsave-blog/<%= blog._id%>"
                             class="btn btn-primary"
                             >unsave</a
                         >
-                        <% } else{ %>
-                        <a
-                            href="/save-blog/<%= blog._id%>"
-                            class="btn btn-primary"
-                            >save</a
-                        >
-                        <% } %>
+
                         <!--  -->
                     </div>
                 </div>

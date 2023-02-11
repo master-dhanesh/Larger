@@ -14,6 +14,7 @@ const LocalStrategy = require("passport-local");
 passport.use(new LocalStrategy(User.authenticate()));
 
 router.get("/", function (req, res, next) {
+    // console.log(req.protocol + "://" + req.get("host") + req.originalUrl);
     res.render("index", { title: "Homepage" });
 });
 
@@ -51,16 +52,13 @@ router.post(
 );
 
 // -----------------------------------------
-router.get("/home", isLoggedIn, function (req, res, next) {
-    Blog.find()
-        .populate("author")
-        .then((blogs) => {
-            res.render("home", {
-                title: req.user.username + " Profile",
-                user: req.user,
-                blogs,
-            });
-        });
+router.get("/home", isLoggedIn, async function (req, res, next) {
+    const blogs = await Blog.find().populate("author").exec();
+    res.render("home", {
+        title: req.user.username + " Profile",
+        user: req.user,
+        blogs,
+    });
 });
 
 // -------------------------------------------------
@@ -262,6 +260,41 @@ router.post("/write", isLoggedIn, async function (req, res, next) {
 router.get("/lists", isLoggedIn, function (req, res, next) {
     req.user.populate("list").then((user) => {
         res.render("lists", { title: "Your Blogs", user, blogs: user.list });
+    });
+});
+
+// ----------------------------------------------
+router.get("/save-blog/:id", isLoggedIn, async function (req, res) {
+    try {
+        await req.user.bookmark.push(req.params.id);
+        await req.user.save();
+        res.redirect(req.get("referer"));
+    } catch (error) {
+        res.send(error);
+    }
+});
+
+router.get("/unsave-blog/:id", isLoggedIn, async function (req, res) {
+    try {
+        const blogindex = req.user.bookmark.findIndex(
+            (b) => b._id === req.params.id
+        );
+        req.user.bookmark.splice(blogindex, 1);
+        await req.user.save();
+        res.redirect(req.get("referer"));
+    } catch (error) {
+        res.send(err);
+    }
+});
+
+// ------------------------------------------
+router.get("/stories", isLoggedIn, function (req, res, next) {
+    req.user.populate("bookmark").then((user) => {
+        res.render("bookmark", {
+            title: "Your Bookmarks",
+            user,
+            blogs: user.bookmark,
+        });
     });
 });
 
